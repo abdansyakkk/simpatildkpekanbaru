@@ -17,7 +17,7 @@
                 </div>
 			    <!-- /.box-header -->
 			    <div class="box-body">
-                    <form action="<?php echo base_url('transaksi/prosespinjam');?>" method="POST" enctype="multipart/form-data">
+                    <form action="<?php echo base_url('transaksi/prosespinjam');?>" method="POST" enctype="multipart/form-data"><?php echo '<input type="hidden" name="'.$this->security->get_csrf_token_name().'" value="'.$this->security->get_csrf_hash().'">'; ?>
 						
 						<div class="row">
 							<div class="col-sm-5">
@@ -169,7 +169,7 @@
 		$.ajax({
 			type: "POST",
 			url: "<?php echo base_url('transaksi/buku');?>",
-			data:'kode_buku='+$(this).attr("data_id"),
+			data:'kode_buku='+$(this).attr("data_id")+'&<?php echo $this->security->get_csrf_token_name();?>=<?php echo $this->security->get_csrf_hash();?>',
 			beforeSend: function(){
 				$("#result_buku").html("");
 				$("#result_tunggu_buku").html('<p style="color:green"><blink>tunggu sebentar</blink></p>');
@@ -189,7 +189,7 @@
 			$.ajax({
 				type: "POST",
 				url: "<?php echo base_url('transaksi/buku');?>",
-				data:'kode_buku='+$(this).val(),
+				data:'kode_buku='+$(this).val()+'&<?php echo $this->security->get_csrf_token_name();?>=<?php echo $this->security->get_csrf_hash();?>',
 				beforeSend: function(){
 					$("#result_tunggu_buku").html('<p style="color:green"><blink>tunggu sebentar</blink></p>');
 				},

@@ -122,7 +122,7 @@ class Transaksi extends CI_Controller {
 				`anggota_id`, `status`, 
 				`tgl_pinjam`, `lama_pinjam`, 
 				`tgl_balik`, `tgl_kembali` 
-				FROM tbl_pinjam WHERE pinjam_id = '$id'")->row();
+				FROM tbl_pinjam WHERE pinjam_id = ?", array($id))->row();
 			}else{
 				echo '<script>alert("DETAIL TIDAK DITEMUKAN");window.location="'.base_url('transaksi').'"</script>';
 			}
@@ -146,7 +146,7 @@ class Transaksi extends CI_Controller {
 			`anggota_id`, `status`, 
 			`tgl_pinjam`, `lama_pinjam`, 
 			`tgl_balik`, `tgl_kembali` 
-			FROM tbl_pinjam WHERE pinjam_id = '$id'")->row();
+			FROM tbl_pinjam WHERE pinjam_id = ?", array($id))->row();
 		}else{
 			echo '<script>alert("DETAIL TIDAK DITEMUKAN");window.location="'.base_url('transaksi').'"</script>';
 		}
@@ -216,12 +216,12 @@ class Transaksi extends CI_Controller {
 		if($this->input->get('kembali'))
 		{
 			$id = $this->input->get('kembali');
-			$pinjam = $this->db->query("SELECT  * FROM tbl_pinjam WHERE pinjam_id = '$id'");
+			$pinjam = $this->db->query("SELECT  * FROM tbl_pinjam WHERE pinjam_id = ?", array($id));
 
 			foreach($pinjam->result_array() as $isi){
 				$pinjam_id = $isi['pinjam_id'];
-				$denda = $this->db->query("SELECT * FROM tbl_denda WHERE pinjam_id = '$pinjam_id'");
-				$jml = $this->db->query("SELECT * FROM tbl_pinjam WHERE pinjam_id = '$pinjam_id'")->num_rows();			
+				$denda = $this->db->query("SELECT * FROM tbl_denda WHERE pinjam_id = ?", array($pinjam_id));
+				$jml = $this->db->query("SELECT * FROM tbl_pinjam WHERE pinjam_id = ?", array($pinjam_id))->num_rows();			
 				if($denda->num_rows() > 0){
 					$s = $denda->row();
 					echo $s->denda;
@@ -281,7 +281,7 @@ class Transaksi extends CI_Controller {
 			$count = $this->M_Admin->CountTableId('tbl_biaya_denda','id_biaya_denda',$id);
 			if($count > 0)
 			{			
-				$this->data['den'] = $this->db->query("SELECT *FROM tbl_biaya_denda WHERE id_biaya_denda='$id'")->row();
+				$this->data['den'] = $this->db->query("SELECT *FROM tbl_biaya_denda WHERE id_biaya_denda=?", array($id))->row();
 			}else{
 				echo '<script>alert("KATEGORI TIDAK DITEMUKAN");window.location="'.base_url('transaksi/denda').'"</script>';
 			}
@@ -398,7 +398,7 @@ class Transaksi extends CI_Controller {
 	public function buku()
     {	
 		$id = $this->input->post('kode_buku');
-		$row = $this->db->query("SELECT * FROM tbl_buku WHERE buku_id ='$id'");
+		$row = $this->db->query("SELECT * FROM tbl_buku WHERE buku_id =?", array($id));
 		
 		if($row->num_rows() > 0)
 		{

@@ -26,7 +26,7 @@
 						<!-- /.box-header -->
 						<div class="box-body">
 							<?php if(!empty($this->input->get('id'))){?>
-							<form method="post" action="<?= base_url('data/katproses');?>">
+							<form method="post" action="<?= base_url('data/katproses');?>"><?php echo '<input type="hidden" name="'.$this->security->get_csrf_token_name().'" value="'.$this->security->get_csrf_hash().'">'; ?>
 								<div class="form-group">
 								<label for="">Nama Kategori</label>
 								<input type="text" name="kategori"  value="<?=$kat->nama_kategori;?>" id="kategori" class="form-control"  placeholder="Contoh : Pemrograman Web" >
@@ -38,7 +38,7 @@
 							</form>
 							<?php }else{?>
 
-							<form method="post" action="<?= base_url('data/katproses');?>">
+							<form method="post" action="<?= base_url('data/katproses');?>"><?php echo '<input type="hidden" name="'.$this->security->get_csrf_token_name().'" value="'.$this->security->get_csrf_hash().'">'; ?>
 								<div class="form-group">
 								<label for="">Nama Kategori</label>
 								<input type="text" name="kategori" id="kategori" class="form-control" placeholder="Contoh : Pemrograman Web" >

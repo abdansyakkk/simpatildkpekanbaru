@@ -101,7 +101,7 @@ $MODALS = [];
               <!-- Edit Agenda -->
               <div class="modal fade" id="modalEditAgenda<?= $ag->agenda_id; ?>" tabindex="-1" role="dialog" aria-labelledby="lblEditAgenda<?= $ag->agenda_id; ?>">
                 <div class="modal-dialog" role="document"><div class="modal-content">
-                  <form action="<?= base_url('data/prosesmateripengajar'); ?>" method="POST">
+                  <form action="<?= base_url('data/prosesmateripengajar'); ?>" method="POST"><?php echo '<input type="hidden" name="'.$this->security->get_csrf_token_name().'" value="'.$this->security->get_csrf_hash().'">'; ?>
                     <div class="modal-header bg-green">
                       <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
                       <h4 class="modal-title" id="lblEditAgenda<?= $ag->agenda_id; ?>"><i class="fa fa-edit" style="color:#fff"></i> Edit Agenda</h4>
@@ -134,7 +134,7 @@ $MODALS = [];
                     <h4 class="modal-title" id="lblTopik<?= $ag->agenda_id; ?>"><i class="fa fa-list" style="color:#fff"></i> Topik — <?= htmlentities($ag->agenda_title); ?></h4>
                   </div>
                   <div class="modal-body">
-                    <form action="<?= base_url('data/prosesmateripengajar'); ?>" method="POST" class="form-inline" style="margin-bottom:10px;">
+                    <form action="<?= base_url('data/prosesmateripengajar'); ?>" method="POST" class="form-inline" style="margin-bottom:10px;"><?php echo '<input type="hidden" name="'.$this->security->get_csrf_token_name().'" value="'.$this->security->get_csrf_hash().'">'; ?>
                       <input type="hidden" name="tambah_topik" value="1">
                       <input type="hidden" name="agenda_id" value="<?= $ag->agenda_id; ?>">
                       <input type="hidden" name="id_pelatihan" value="<?= $id_pelatihan; ?>">
@@ -170,7 +170,7 @@ $MODALS = [];
                           <!-- Edit Topik -->
                           <div class="modal fade" id="modalEditTopik<?= $t->topic_id; ?>" tabindex="-1" role="dialog" aria-labelledby="lblEditTopik<?= $t->topic_id; ?>">
                             <div class="modal-dialog" role="document"><div class="modal-content">
-                              <form action="<?= base_url('data/prosesmateripengajar'); ?>" method="POST">
+                              <form action="<?= base_url('data/prosesmateripengajar'); ?>" method="POST"><?php echo '<input type="hidden" name="'.$this->security->get_csrf_token_name().'" value="'.$this->security->get_csrf_hash().'">'; ?>
                                 <div class="modal-header bg-green">
                                   <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
                                   <h4 class="modal-title" id="lblEditTopik<?= $t->topic_id; ?>"><i class="fa fa-edit" style="color:#fff"></i> Edit Topik</h4>
@@ -208,7 +208,7 @@ $MODALS = [];
                     <h4 class="modal-title" id="lblGrup<?= $ag->agenda_id; ?>"><i class="fa fa-users" style="color:#fff"></i> Grup Pengajar — <?= htmlentities($ag->agenda_title); ?></h4>
                   </div>
                   <div class="modal-body">
-                    <form action="<?= base_url('data/prosesmateripengajar'); ?>" method="POST" class="form-inline" style="margin-bottom:10px;">
+                    <form action="<?= base_url('data/prosesmateripengajar'); ?>" method="POST" class="form-inline" style="margin-bottom:10px;"><?php echo '<input type="hidden" name="'.$this->security->get_csrf_token_name().'" value="'.$this->security->get_csrf_hash().'">'; ?>
                       <input type="hidden" name="tambah_grup" value="1">
                       <input type="hidden" name="agenda_id" value="<?= $ag->agenda_id; ?>">
                       <input type="hidden" name="id_pelatihan" value="<?= $id_pelatihan; ?>">
@@ -242,7 +242,7 @@ $MODALS = [];
                           <!-- Edit Grup -->
                           <div class="modal fade" id="modalEditGrup<?= $g->agenda_group_id; ?>" tabindex="-1" role="dialog" aria-labelledby="lblEditGrup<?= $g->agenda_group_id; ?>">
                             <div class="modal-dialog" role="document"><div class="modal-content">
-                              <form action="<?= base_url('data/prosesmateripengajar'); ?>" method="POST">
+                              <form action="<?= base_url('data/prosesmateripengajar'); ?>" method="POST"><?php echo '<input type="hidden" name="'.$this->security->get_csrf_token_name().'" value="'.$this->security->get_csrf_hash().'">'; ?>
                                 <div class="modal-header bg-green">
                                   <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
                                   <h4 class="modal-title" id="lblEditGrup<?= $g->agenda_group_id; ?>"><i class="fa fa-edit" style="color:#fff"></i> Edit Grup Pengajar</h4>
@@ -284,7 +284,7 @@ $MODALS = [];
 <!-- Tambah Agenda (global, di luar table) -->
 <div class="modal fade" id="modalTambahAgenda" tabindex="-1" role="dialog" aria-labelledby="lblTambahAgenda">
   <div class="modal-dialog" role="document"><div class="modal-content">
-    <form action="<?= base_url('data/prosesmateripengajar'); ?>" method="POST">
+    <form action="<?= base_url('data/prosesmateripengajar'); ?>" method="POST"><?php echo '<input type="hidden" name="'.$this->security->get_csrf_token_name().'" value="'.$this->security->get_csrf_hash().'">'; ?>
       <div class="modal-header bg-blue">
         <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
         <h4 class="modal-title" id="lblTambahAgenda"><i class="fa fa-plus" style="color:#fff"></i> Tambah Agenda</h4>

@@ -742,7 +742,15 @@ private function _get_pengajar_assignments($id_pelatihan)
 
 
   public function get_pelatihan_by_panitia($id_jenis, $panitia_id) {
-    $this->db->select('pel.*, j.nama_jenis_pelatihan AS nama_jenis_pelatihan, pp.peran');
+    // PERBAIKAN: pp.peran dibungkus GROUP_CONCAT supaya kompatibel dengan
+    // ONLY_FULL_GROUP_BY (default di MariaDB 10.2+/MySQL 5.7+) saat dipakai
+    // bareng GROUP BY di bawah. Sekaligus lebih informatif: kalau satu
+    // panitia menjabat lebih dari satu peran di pelatihan yang sama,
+    // semua perannya ikut tampil (dipisah koma), bukan cuma salah satu.
+    // MIN() dipakai (bukan cuma nama_jenis_pelatihan biasa) supaya aman
+    // dari mode ONLY_FULL_GROUP_BY di semua versi MySQL/MariaDB — nilainya
+    // tetap sama saja karena satu id_jenis_pelatihan hanya punya satu nama.
+    $this->db->select('pel.*, MIN(j.nama_jenis_pelatihan) AS nama_jenis_pelatihan, GROUP_CONCAT(DISTINCT pp.peran SEPARATOR ", ") AS peran', FALSE);
     $this->db->from('tbl_pelatihan pel');
     $this->db->join('tbl_jenis_pelatihan j', 'j.id_jenis_pelatihan = pel.id_jenis_pelatihan', 'left');
     $this->db->join('tbl_panitia_pelatihan pp', 'pp.pelatihan_id = pel.id_pelatihan');
@@ -751,6 +759,15 @@ private function _get_pengajar_assignments($id_pelatihan)
     if ($id_jenis != null) {
         $this->db->where('pel.id_jenis_pelatihan', $id_jenis);
     }
+
+    // PERBAIKAN BUG: satu panitia bisa punya lebih dari satu baris yang
+    // cocok di tbl_panitia_pelatihan untuk pelatihan yang sama (baik
+    // karena memang menjabat beberapa peran sekaligus, maupun karena data
+    // lama yang ke-insert dobel). Tanpa GROUP BY, JOIN ini menghasilkan
+    // satu baris per kecocokan -> pelatihan yang sama tampil berkali-kali
+    // di halaman daftar (data?jenis=...). GROUP BY memastikan satu
+    // pelatihan hanya muncul sekali di listing.
+    $this->db->group_by('pel.id_pelatihan');
 
     $this->db->order_by('pel.tanggal_mulai_pelatihan', 'DESC');
     return $this->db->get();

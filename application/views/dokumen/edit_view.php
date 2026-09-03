@@ -18,7 +18,7 @@
             <h3 class="box-title">Edit Data Dokumen</h3>
           </div>
 
-          <form action="<?= base_url('data/prosesdokumen'); ?>" method="POST">
+          <form action="<?= base_url('data/prosesdokumen'); ?>" method="POST"><?php echo '<input type="hidden" name="'.$this->security->get_csrf_token_name().'" value="'.$this->security->get_csrf_hash().'">'; ?>
             <div class="box-body">
 
               <div class="form-group">

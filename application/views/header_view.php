@@ -85,7 +85,7 @@
           </li>
           <li>
             <?php
-              $d = $this->db->query("SELECT * FROM tbl_login WHERE id_login = '$idbo'")->row();
+              $d = $this->db->query("SELECT * FROM tbl_login WHERE id_login = ?", array($idbo))->row();
              ?>
             <a href="<?= base_url('user/edit/'.$idbo);?>">
               Welcome , <i class="fa fa-edit"> </i> <?php echo $d->nama; echo ' | ( '.$d->level.' )'; ?></a>

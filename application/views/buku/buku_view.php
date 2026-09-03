@@ -63,7 +63,7 @@
 								<td>
 									<?php
 										$id = $isi['buku_id'];
-										$dd = $this->db->query("SELECT * FROM tbl_pinjam WHERE buku_id= '$id' AND status = 'Dipinjam'");
+										$dd = $this->db->query("SELECT * FROM tbl_pinjam WHERE buku_id= ? AND status = 'Dipinjam'", array($id));
 										if($dd->num_rows() > 0 )
 										{
 											echo $dd->num_rows();

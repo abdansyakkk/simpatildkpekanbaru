@@ -42,10 +42,10 @@
 							$no=1;
 							foreach($pinjam->result_array() as $isi){
 									$anggota_id = $isi['anggota_id'];
-									$ang = $this->db->query("SELECT * FROM tbl_login WHERE anggota_id = '$anggota_id'")->row();
+									$ang = $this->db->query("SELECT * FROM tbl_login WHERE anggota_id = ?", array($anggota_id))->row();
 
 									$pinjam_id = $isi['pinjam_id'];
-									$denda = $this->db->query("SELECT * FROM tbl_denda WHERE pinjam_id = '$pinjam_id'");
+									$denda = $this->db->query("SELECT * FROM tbl_denda WHERE pinjam_id = ?", array($pinjam_id));
 									$total_denda = $denda->row();
 						?>
                             <tr>
@@ -62,7 +62,7 @@
 										{
 											echo $this->M_Admin->rp($total_denda->denda);
 										}else{
-											$jml = $this->db->query("SELECT * FROM tbl_pinjam WHERE pinjam_id = '$pinjam_id'")->num_rows();			
+											$jml = $this->db->query("SELECT * FROM tbl_pinjam WHERE pinjam_id = ?", array($pinjam_id))->num_rows();			
 											$date1 = date('Ymd');
 											$date2 = preg_replace('/[^0-9]/','',$isi['tgl_balik']);
 											$diff = $date1 - $date2;

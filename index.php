@@ -1,14 +1,20 @@
 <?php
-set_error_handler(function($severity, $message, $file, $line) {
-    echo "<pre>🔥 ERROR DITEMUKAN 🔥\n";
-    echo "Message : $message\n";
-    echo "File    : $file\n";
-    echo "Line    : $line\n";
-    echo "TRACE:\n";
-    debug_print_backtrace();
-    echo "</pre>";
-    exit;
-});
+/*
+ * PERBAIKAN KEAMANAN: Handler debug lama di sini mem-print pesan error,
+ * path file, baris, dan FULL BACKTRACE langsung ke browser untuk SEMUA
+ * pengunjung (termasuk yang belum login) setiap kali ada PHP warning/error —
+ * ini kebocoran informasi besar (path server, struktur kode, kadang nilai
+ * variabel sensitif ikut tampil di backtrace). Sudah dihapus.
+ *
+ * Sebagai gantinya: error dicatat ke log file (untuk developer), dan pesan
+ * generik saja yang tampil ke user saat production. Saat development,
+ * error tetap ditampilkan (memakai handler bawaan PHP/CodeIgniter) supaya
+ * proses debug tetap nyaman.
+ */
+
+// Muat environment variables dari file .env (jika ada) sebelum apa pun lain
+// dijalankan, supaya kredensial (DB, dsb) bisa diambil lewat getenv().
+require_once __DIR__ . '/application/config/load_env.php';
 
 /** 
  * CodeIgniter
@@ -64,7 +70,14 @@ set_error_handler(function($severity, $message, $file, $line) {
  *
  * NOTE: If you change these, also change the error_reporting() code below
  */
-	define('ENVIRONMENT', isset($_SERVER['CI_ENV']) ? $_SERVER['CI_ENV'] : 'development');
+	// PERBAIKAN KEAMANAN: default diubah ke 'production' (fail-safe).
+	// Sebelumnya default ke 'development', artinya kalau server LUPA
+	// set CI_ENV=production, aplikasi otomatis jalan dalam mode development
+	// -> db_debug aktif -> error database (query, struktur tabel, dll)
+	// bisa tampil ke publik. Sekarang harus di-set EKSPLISIT ke 'development'
+	// untuk melihat error detail; kalau tidak di-set, aman by default.
+	$__ci_env = isset($_SERVER['CI_ENV']) ? $_SERVER['CI_ENV'] : getenv('CI_ENV');
+	define('ENVIRONMENT', $__ci_env ?: 'production');
 
 
 

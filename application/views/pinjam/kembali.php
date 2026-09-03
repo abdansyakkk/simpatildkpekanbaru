@@ -135,9 +135,9 @@
 										<td>
 										<?php 
 												$pinjam_id = $pinjam->pinjam_id;
-												$denda = $this->db->query("SELECT * FROM tbl_denda WHERE pinjam_id = '$pinjam_id'");
+												$denda = $this->db->query("SELECT * FROM tbl_denda WHERE pinjam_id = ?", array($pinjam_id));
 												
-												$jml = $this->db->query("SELECT * FROM tbl_pinjam WHERE pinjam_id = '$pinjam_id'")->num_rows();			
+												$jml = $this->db->query("SELECT * FROM tbl_pinjam WHERE pinjam_id = ?", array($pinjam_id))->num_rows();			
 												$date1 = date('Ymd');
 												$date2 = preg_replace('/[^0-9]/','',$pinjam->tgl_balik);	
 												$diff = $date1 - $date2;
@@ -327,9 +327,9 @@
 			<td>
 			<?php 
 				$pinjam_id = $pinjam->pinjam_id;
-				$denda = $this->db->query("SELECT * FROM tbl_denda WHERE pinjam_id = '$pinjam_id'");
+				$denda = $this->db->query("SELECT * FROM tbl_denda WHERE pinjam_id = ?", array($pinjam_id));
 				
-				$jml = $this->db->query("SELECT * FROM tbl_pinjam WHERE pinjam_id = '$pinjam_id'")->num_rows();			
+				$jml = $this->db->query("SELECT * FROM tbl_pinjam WHERE pinjam_id = ?", array($pinjam_id))->num_rows();			
 				$date1 = date('Ymd');
 				$date2 = preg_replace('/[^0-9]/','',$pinjam->tgl_balik);
 				$diff = $date1 - $date2;

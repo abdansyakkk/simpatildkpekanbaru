@@ -18,7 +18,7 @@
             <h3 class="box-title">Edit Data Role</h3>
           </div>
 
-          <form action="<?= base_url('data/prosesrole'); ?>" method="POST">
+          <form action="<?= base_url('data/prosesrole'); ?>" method="POST"><?php echo '<input type="hidden" name="'.$this->security->get_csrf_token_name().'" value="'.$this->security->get_csrf_hash().'">'; ?>
             <div class="box-body">
 
               <div class="form-group">

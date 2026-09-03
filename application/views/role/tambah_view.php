@@ -17,7 +17,7 @@
           <div class="box-header with-border"></div>
 
           <div class="box-body">
-            <form action="<?= base_url('data/prosesrole'); ?>" method="POST">
+            <form action="<?= base_url('data/prosesrole'); ?>" method="POST"><?php echo '<input type="hidden" name="'.$this->security->get_csrf_token_name().'" value="'.$this->security->get_csrf_hash().'">'; ?>
               <div class="form-group">
                 <label>Nama Role</label>
                 <input type="text" class="form-control" name="nama_role" placeholder="Contoh: Pranata, Kepala Kantor" required>

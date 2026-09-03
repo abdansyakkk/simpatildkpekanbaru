@@ -123,7 +123,7 @@ $open_modal = $this->session->flashdata('open_modal');
                                   <div class="modal fade" id="modalEditTopik<?= (int)$tp['topic_id']; ?>" tabindex="-1" role="dialog" aria-labelledby="modalEditTopikLabel<?= (int)$tp['topic_id']; ?>">
                                     <div class="modal-dialog" role="document">
                                       <div class="modal-content">
-                                        <form action="<?= base_url('data/prosesmateri'); ?>" method="POST">
+                                        <form action="<?= base_url('data/prosesmateri'); ?>" method="POST"><?php echo '<input type="hidden" name="'.$this->security->get_csrf_token_name().'" value="'.$this->security->get_csrf_hash().'">'; ?>
                                           <div class="modal-header bg-green">
                                             <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                                             <h4 class="modal-title" id="modalEditTopikLabel<?= (int)$tp['topic_id']; ?>">
@@ -188,7 +188,7 @@ $open_modal = $this->session->flashdata('open_modal');
                   <div class="modal fade" id="modalEditAgenda<?= (int)$ag['agenda_id']; ?>" tabindex="-1" role="dialog" aria-labelledby="modalEditAgendaLabel<?= (int)$ag['agenda_id']; ?>">
                     <div class="modal-dialog" role="document">
                       <div class="modal-content">
-                        <form action="<?= base_url('data/prosesmateri'); ?>" method="POST">
+                        <form action="<?= base_url('data/prosesmateri'); ?>" method="POST"><?php echo '<input type="hidden" name="'.$this->security->get_csrf_token_name().'" value="'.$this->security->get_csrf_hash().'">'; ?>
                           <div class="modal-header bg-green">
                             <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                             <h4 class="modal-title" id="modalEditAgendaLabel<?= (int)$ag['agenda_id']; ?>">
@@ -216,7 +216,7 @@ $open_modal = $this->session->flashdata('open_modal');
                   <div class="modal fade" id="modalTambahTopik<?= (int)$ag['agenda_id']; ?>" tabindex="-1" role="dialog" aria-labelledby="modalTambahTopikLabel<?= (int)$ag['agenda_id']; ?>">
                     <div class="modal-dialog" role="document">
                       <div class="modal-content">
-                        <form action="<?= base_url('data/prosesmateri'); ?>" method="POST">
+                        <form action="<?= base_url('data/prosesmateri'); ?>" method="POST"><?php echo '<input type="hidden" name="'.$this->security->get_csrf_token_name().'" value="'.$this->security->get_csrf_hash().'">'; ?>
                           <div class="modal-header bg-blue">
                             <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                             <h4 class="modal-title" id="modalTambahTopikLabel<?= (int)$ag['agenda_id']; ?>">
@@ -280,7 +280,7 @@ $open_modal = $this->session->flashdata('open_modal');
 <div class="modal fade" id="modalTambahAgenda" tabindex="-1" role="dialog" aria-labelledby="modalTambahAgendaLabel">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
-      <form action="<?= base_url('data/prosesmateri'); ?>" method="POST">
+      <form action="<?= base_url('data/prosesmateri'); ?>" method="POST"><?php echo '<input type="hidden" name="'.$this->security->get_csrf_token_name().'" value="'.$this->security->get_csrf_hash().'">'; ?>
         <div class="modal-header bg-blue">
           <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
           <h4 class="modal-title" id="modalTambahAgendaLabel">

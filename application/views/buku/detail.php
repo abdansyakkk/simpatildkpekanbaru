@@ -68,7 +68,7 @@
 							<td>
 								<?php
 									$id = $buku->buku_id;
-									$dd = $this->db->query("SELECT * FROM tbl_pinjam WHERE buku_id= '$id' AND status = 'Dipinjam'");
+									$dd = $this->db->query("SELECT * FROM tbl_pinjam WHERE buku_id= ? AND status = 'Dipinjam'", array($id));
 									if($dd->num_rows() > 0 )
 									{
 										echo $dd->num_rows();
@@ -135,7 +135,7 @@
 	<?php 
 	$no = 1;
 	$bukuid = $buku->buku_id;
-	$pin = $this->db->query("SELECT * FROM tbl_pinjam WHERE buku_id ='$bukuid' AND status = 'Dipinjam'")->result_array();
+	$pin = $this->db->query("SELECT * FROM tbl_pinjam WHERE buku_id =? AND status = 'Dipinjam'", array($bukuid))->result_array();
 	foreach($pin as $si)
 	{
 		$isi = $this->M_Admin->get_tableid_edit('tbl_login','anggota_id',$si['anggota_id']);

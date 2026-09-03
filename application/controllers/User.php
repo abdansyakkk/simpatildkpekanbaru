@@ -28,6 +28,16 @@ class User extends CI_Controller {
 
 	public function index()
 {	
+    // PERBAIKAN KEAMANAN: daftar seluruh user (termasuk field sensitif)
+    // sebelumnya bisa diakses siapa pun yang login, padahal menu ini di
+    // sidebar hanya ditampilkan untuk level Admin. Sekarang endpoint-nya
+    // sendiri juga dikunci ke Admin, supaya tidak bisa diakses langsung
+    // lewat URL oleh level lain.
+    if ($this->session->userdata('level') !== 'Admin') {
+        echo '<script>alert("Anda tidak punya akses ke halaman ini");window.location="'.base_url('dashboard').'"</script>';
+        return;
+    }
+
     $this->data['idbo'] = $this->session->userdata('ses_id');
 
     // Fetch all users first
@@ -63,12 +73,24 @@ class User extends CI_Controller {
 
     public function add()
     {
+		// PERBAIKAN KEAMANAN (broken access control): sebelumnya siapa pun
+		// yang sedang login (termasuk level 'Anggota') bisa langsung akses
+		// endpoint ini dan membuat akun baru dengan level APAPUN, termasuk
+		// 'Admin' -> privilege escalation. Sekarang hanya Admin & Panitia
+		// yang boleh membuat user baru, sesuai role yang memang berwenang
+		// mengelola user di aplikasi ini.
+		if (!in_array($this->session->userdata('level'), ['Admin', 'Panitia'])) {
+			echo '<script>alert("Anda tidak punya akses untuk membuat user baru");window.location="'.base_url('dashboard').'"</script>';
+			return;
+		}
+
 		// format tabel / kode baru 3 hurup / id tabel / order by limit ngambil data terakhir
 		$id = $this->M_Admin->buat_kode('tbl_login','AG','id_login','ORDER BY id_login DESC LIMIT 1'); 
         $nama = htmlentities($this->input->post('nama',TRUE));
         $nip = htmlentities($this->input->post('nip',TRUE));
         $user = htmlentities($this->input->post('user',TRUE));
-        $pass = md5(htmlentities($this->input->post('pass',TRUE)));
+        $pass_plain = $this->input->post('pass',TRUE);
+        $pass = password_hash($pass_plain, PASSWORD_BCRYPT); // PERBAIKAN: bcrypt, bukan MD5
         $level = htmlentities($this->input->post('level',TRUE));
         $jenkel = htmlentities($this->input->post('jenkel',TRUE));
         $telepon = htmlentities($this->input->post('telepon',TRUE));
@@ -76,7 +98,7 @@ class User extends CI_Controller {
         $alamat = htmlentities($this->input->post('alamat',TRUE));
 		$email = $_POST['email'];
 		
-		$dd = $this->db->query("SELECT * FROM tbl_login WHERE user = '$user' OR email = '$email'");
+		$dd = $this->db->query("SELECT * FROM tbl_login WHERE user = ? OR email = ?", array($user, $email));
 		if($dd->num_rows() > 0)
 		{
 			$this->session->set_flashdata('pesan','<div id="notifikasi"><div class="alert alert-warning">
@@ -191,6 +213,24 @@ class User extends CI_Controller {
         $alamat = htmlentities($this->input->post('alamat',TRUE));
         $id_login = htmlentities($this->input->post('id_login',TRUE));
 
+        // PERBAIKAN KEAMANAN (IDOR + privilege escalation): sebelumnya
+        // 'id_login' dan 'level' diambil mentah-mentah dari form POST dan
+        // dipercaya begitu saja. Artinya user level 'Anggota' bisa mengubah
+        // field tersembunyi di form (lewat browser devtools / request manual)
+        // untuk: (a) meng-edit akun ORANG LAIN dengan mengganti id_login, dan
+        // (b) menaikkan levelnya sendiri jadi 'Admin' lewat field level.
+        //
+        // Sekarang: hanya Admin yang boleh mengedit id_login siapa pun (dari
+        // form) dan mengubah level. Selain Admin, id_login dipaksa ke akun
+        // milik sendiri (session), dan level tidak ikut diubah (dipertahankan
+        // sesuai data lama di database).
+        $current_level = $this->session->userdata('level');
+        if ($current_level !== 'Admin') {
+            $id_login = $this->session->userdata('ses_id');
+            $existing = $this->M_Admin->get_tableid_edit('tbl_login', 'id_login', $id_login);
+            $level = $existing ? $existing->level : $current_level;
+        }
+
         // setting konfigurasi upload
         $nmfile = "user_".time();
         $config['upload_path'] = './assets_style/image/';
@@ -207,7 +247,7 @@ class User extends CI_Controller {
 				$data = array(
 					'nama'=>$nama,
 					'user'=>$user,
-					'pass'=>md5($pass),
+					'pass'=>password_hash($pass, PASSWORD_BCRYPT), // PERBAIKAN: bcrypt, bukan MD5
 					'tempat_lahir'=>$_POST['lahir'],
 					'tgl_lahir'=>$_POST['tgl_lahir'],
 					'level'=>$level,
@@ -274,7 +314,7 @@ class User extends CI_Controller {
 					'user'=>$user,
 					'tempat_lahir'=>$_POST['lahir'],
 					'tgl_lahir'=>$_POST['tgl_lahir'],
-					'pass'=>md5($pass),
+					'pass'=>password_hash($pass, PASSWORD_BCRYPT), // PERBAIKAN: bcrypt, bukan MD5
 					'level'=>$level,
 					'email'=>$_POST['email'],
 					'nip'=>$nip,
@@ -349,6 +389,15 @@ class User extends CI_Controller {
 
 	public function del() 
 {
+    // PERBAIKAN KEAMANAN (broken access control): sebelumnya semua user
+    // yang sedang login bisa memanggil URL ini untuk menghapus akun user
+    // lain manapun, termasuk akun Admin. Sekarang hanya Admin yang boleh
+    // menghapus akun user.
+    if ($this->session->userdata('level') !== 'Admin') {
+        echo '<script>alert("Anda tidak punya akses untuk menghapus user");window.location="'.base_url('dashboard').'"</script>';
+        return;
+    }
+
     $id_login = $this->uri->segment(3);
     
     if (empty($id_login)) {

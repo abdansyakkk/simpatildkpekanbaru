@@ -9,7 +9,7 @@
   </section>
 
   <section class="content">
-    <form action="<?= base_url('data/prosesmateripelatihan'); ?>" method="POST">
+    <form action="<?= base_url('data/prosesmateripelatihan'); ?>" method="POST"><?php echo '<input type="hidden" name="'.$this->security->get_csrf_token_name().'" value="'.$this->security->get_csrf_hash().'">'; ?>
       <div class="row">
         <div class="col-md-12">
 

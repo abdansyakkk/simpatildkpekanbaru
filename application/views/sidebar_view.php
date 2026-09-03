@@ -7,7 +7,7 @@
       <div class="user-panel">
         <div class="pull-left image">
           <?php
-            $d = $this->db->query("SELECT * FROM tbl_login WHERE id_login='$idbo'")->row();
+            $d = $this->db->query("SELECT * FROM tbl_login WHERE id_login=?", array($idbo))->row();
             if(isset($d->foto)){
           ?>
           <br/>

@@ -968,12 +968,16 @@ if ($this->input->get('id_detail_pelatihan')) {
         foreach ($roles as $field => $role_name) {
             $login_id = $getI($field);
             if ($login_id) {
-                $this->db->insert('tbl_panitia_pelatihan', [
-                    'pelatihan_id' => $id_pelatihan,
-                    'panitia_id'   => $login_id,
-                    'peran'        => $role_name
-                ]);
-                $panitia_ids[$field] = $this->db->insert_id();
+                // PERBAIKAN BUG: sebelumnya insert() langsung tanpa cek dulu,
+                // jadi kalau form ini ke-submit lebih dari sekali untuk
+                // pelatihan yang sama (double klik, resubmit, dll), baris
+                // panitia+peran yang SAMA PERSIS ikut ter-insert ulang -->
+                // pelatihan itu jadi muncul dobel di halaman daftar
+                // (data?jenis=...) karena listing di-JOIN ke tabel ini.
+                // Sekarang pakai insertPanitia() yang sudah ada di file ini,
+                // yang mengecek dulu apakah kombinasinya sudah ada sebelum
+                // insert baru.
+                $panitia_ids[$field] = $this->insertPanitia($id_pelatihan, $login_id, $role_name);
             } else {
                 $panitia_ids[$field] = NULL;
             }
@@ -1636,11 +1640,15 @@ public function detailpelatihanedit()
         }
 
         // === QUERY DASAR ===
+        // PERBAIKAN: p.nama_kegiatan & p.id_jenis_pelatihan dibungkus MIN()
+        // supaya aman dipakai bareng GROUP BY di bawah (kompatibel dengan
+        // mode ONLY_FULL_GROUP_BY) — nilainya tetap sama karena satu
+        // mp.id_pelatihan hanya join ke satu baris p.
         $this->db->select('
             mp.*,
-            p.nama_kegiatan,
-            p.id_jenis_pelatihan
-        ');
+            MIN(p.nama_kegiatan) AS nama_kegiatan,
+            MIN(p.id_jenis_pelatihan) AS id_jenis_pelatihan
+        ', FALSE);
         $this->db->from('tbl_materi_pelatihan mp');
         $this->db->join('tbl_pelatihan p', 'mp.id_pelatihan = p.id_pelatihan', 'left');
         $this->db->where('mp.deleted_at IS NULL', null, false);
@@ -1655,6 +1663,18 @@ public function detailpelatihanedit()
             $this->db->join('tbl_panitia_pelatihan pp', 'pp.pelatihan_id = p.id_pelatihan', 'left');
             $this->db->where('pp.panitia_id', $panitia_id);
         }
+
+        // PERBAIKAN BUG (sama seperti di data?jenis=...): satu panitia bisa
+        // punya beberapa baris cocok di tbl_panitia_pelatihan untuk
+        // pelatihan yang sama (beberapa peran sekaligus, atau data lama
+        // yang ke-insert dobel). Tanpa GROUP BY, JOIN di atas membuat baris
+        // materi pelatihan yang sama ikut tampil berkali-kali untuk user
+        // non-admin. GROUP BY diterapkan untuk SEMUA level (bukan hanya
+        // non-admin) karena SELECT di atas sudah pakai MIN() — GROUP BY
+        // wajib ada supaya fungsi agregat itu valid, dan untuk admin ini
+        // tidak mengubah jumlah baris sama sekali (tidak ada join
+        // tbl_panitia_pelatihan untuk admin).
+        $this->db->group_by('mp.id_materi_pelatihan');
 
         $this->db->order_by('mp.id_materi_pelatihan', 'DESC');
         $this->data['materi_pelatihan'] = $this->db->get()->result();
@@ -1672,8 +1692,8 @@ public function detailpelatihanedit()
                         p.id_jenis_pelatihan
                     FROM tbl_materi_pelatihan mp
                     LEFT JOIN tbl_pelatihan p ON mp.id_pelatihan = p.id_pelatihan
-                    WHERE mp.id_materi_pelatihan = '$id'
-                ")->row();
+                    WHERE mp.id_materi_pelatihan = ?
+                ", array($id))->row();
             } else {
                 $this->session->set_flashdata('error', 'Materi pelatihan tidak ditemukan');
                 redirect('data/materipelatihan?jenis=');
@@ -1989,7 +2009,7 @@ public function detailpelatihanedit()
 
 			if ($count > 0) {
 				// Tetap ambil datanya (tanpa filtering deleted_at karena ini konteks pengeditan spesifik)
-				$this->data['dokumen'] = $this->db->query("SELECT * FROM tbl_dokumen WHERE id_dokumen='$id'")->row();
+				$this->data['dokumen'] = $this->db->query("SELECT * FROM tbl_dokumen WHERE id_dokumen=?", array($id))->row();
 			} else {
 				echo '<script>alert("KATEGORI TIDAK DITEMUKAN");window.location="' . base_url('data/dokumen') . '"</script>';
 			}
@@ -2186,7 +2206,7 @@ public function detailpelatihanedit()
             $this->data['title_web'] = 'Data Pelatihan Lampiran Dokumen';
         }
 
-        $this->db->select('p.*, j.nama_jenis_pelatihan');
+        $this->db->select('p.*, MIN(j.nama_jenis_pelatihan) AS nama_jenis_pelatihan', FALSE); // MIN() supaya aman dipakai bareng GROUP BY (ONLY_FULL_GROUP_BY)
         $this->db->from('tbl_pelatihan p');
         $this->db->join('tbl_jenis_pelatihan j', 'j.id_jenis_pelatihan = p.id_jenis_pelatihan', 'left');
         $this->db->where('p.deleted_at IS NULL', NULL, FALSE);
@@ -2199,6 +2219,13 @@ public function detailpelatihanedit()
             $this->db->join('tbl_panitia_pelatihan pp', 'pp.pelatihan_id = p.id_pelatihan', 'inner');
             $this->db->where('pp.panitia_id', $panitia_id);
         }
+
+        // PERBAIKAN BUG: SELECT di atas pakai MIN(), jadi GROUP BY wajib
+        // diterapkan untuk SEMUA level (bukan hanya saat join panitia
+        // ditambahkan), supaya tidak semua baris malah ke-collapse jadi
+        // satu untuk level selain panitia. Untuk selain panitia ini tidak
+        // mengubah jumlah baris (tidak ada join tbl_panitia_pelatihan).
+        $this->db->group_by('p.id_pelatihan');
 
         $this->db->order_by('p.id_pelatihan', 'DESC');
         $this->data['pelatihan'] = $this->db->get();
@@ -2727,7 +2754,7 @@ public function detailpelatihanedit()
             $this->data['title_web'] = 'Data Pelatihan Lampiran Dokumen';
         }
 		
-		$this->db->select('p.*, j.nama_jenis_pelatihan');
+		$this->db->select('p.*, MIN(j.nama_jenis_pelatihan) AS nama_jenis_pelatihan', FALSE); // MIN() supaya aman dipakai bareng GROUP BY (ONLY_FULL_GROUP_BY)
         $this->db->from('tbl_pelatihan p');
         $this->db->join('tbl_jenis_pelatihan j', 'j.id_jenis_pelatihan = p.id_jenis_pelatihan', 'left');
         $this->db->where('p.deleted_at IS NULL', NULL, FALSE);
@@ -2740,6 +2767,13 @@ public function detailpelatihanedit()
             $this->db->join('tbl_panitia_pelatihan pp', 'pp.pelatihan_id = p.id_pelatihan', 'inner');
             $this->db->where('pp.panitia_id', $panitia_id);
         }
+
+        // PERBAIKAN BUG: SELECT di atas pakai MIN(), jadi GROUP BY wajib
+        // diterapkan untuk SEMUA level (bukan hanya saat join panitia
+        // ditambahkan), supaya tidak semua baris malah ke-collapse jadi
+        // satu untuk level selain panitia. Untuk selain panitia ini tidak
+        // mengubah jumlah baris (tidak ada join tbl_panitia_pelatihan).
+        $this->db->group_by('p.id_pelatihan');
 
         $this->db->order_by('p.id_pelatihan', 'DESC');
         $this->data['pelatihan'] = $this->db->get();
@@ -3118,7 +3152,7 @@ public function pesertapelatihanjenis()
         $this->data['title_web'] = 'Data Peserta Pelatihan (Semua Jenis)';
     }
 
-     $this->db->select('p.*, j.nama_jenis_pelatihan');
+     $this->db->select('p.*, MIN(j.nama_jenis_pelatihan) AS nama_jenis_pelatihan', FALSE); // MIN() supaya aman dipakai bareng GROUP BY (ONLY_FULL_GROUP_BY)
     $this->db->from('tbl_pelatihan p');
     $this->db->join('tbl_jenis_pelatihan j', 'j.id_jenis_pelatihan = p.id_jenis_pelatihan', 'left');
     
@@ -3132,6 +3166,11 @@ public function pesertapelatihanjenis()
         $this->db->join('tbl_panitia_pelatihan pp', 'pp.pelatihan_id = p.id_pelatihan', 'inner');
         $this->db->where('pp.panitia_id', $panitia_id);
     }
+
+    // PERBAIKAN BUG: SELECT di atas pakai MIN(), jadi GROUP BY wajib
+    // diterapkan untuk SEMUA level (bukan hanya saat join panitia
+    // ditambahkan). Untuk selain panitia ini tidak mengubah jumlah baris.
+    $this->db->group_by('p.id_pelatihan');
 
     $this->db->order_by('p.tanggal_mulai_pelatihan', 'DESC');
     $this->data['pelatihan'] = $this->db->get();
@@ -3149,17 +3188,50 @@ public function pesertapelatihanjenis()
 
 	public function pesertapelatihan()
 	{
-		$this->data['idbo'] = $this->session->userdata('ses_id');
+        $this->data['idbo'] = $this->session->userdata('ses_id');
+		$panitia_id = $this->session->userdata('id_login');
+        $level = $this->session->userdata('level');
     	$jenis = $this->input->get('jenis');
+        $id_jenis = null;
     	$this->data['pelatihan'] = $this->db->query("SELECT * FROM tbl_pelatihan WHERE deleted_at IS NULL ORDER BY id_pelatihan DESC");
 		// Terapkan filter berdasarkan jenis
-		if ($jenis == 'PJJ') {
-			$this->db->where('id_jenis_pelatihan', 1);
-		} elseif ($jenis == 'PDWK') {
-			$this->db->where('id_jenis_pelatihan', 2);
-		} elseif ($jenis == 'Latsar') {
-			$this->db->where('id_jenis_pelatihan', 3);
-		}
+		if ($jenis === 'PJJ') {
+            $id_jenis = 1;
+            $this->data['title_web'] = 'Data Peserta Pelatihan PJJ';
+        } elseif ($jenis === 'PDWK') {
+            $id_jenis = 2;
+            $this->data['title_web'] = 'Data Peserta Pelatihan PDWK';
+        } elseif ($jenis === 'Latsar') {
+            $id_jenis = 3;
+            $this->data['title_web'] = 'Data Peserta Pelatihan Dasar CPNS';
+        } else {
+            $this->data['title_web'] = 'Data Peserta Pelatihan';
+        }
+
+        $this->db->select('p.*, MIN(j.nama_jenis_pelatihan) AS nama_jenis_pelatihan', FALSE); // MIN() supaya aman dipakai bareng GROUP BY (ONLY_FULL_GROUP_BY)
+        $this->db->from('tbl_pelatihan p');
+        $this->db->join('tbl_jenis_pelatihan j', 'j.id_jenis_pelatihan = p.id_jenis_pelatihan', 'left');
+        $this->db->where('p.deleted_at IS NULL', NULL, FALSE);
+
+        if (!is_null($id_jenis)) {
+            $this->db->where('p.id_jenis_pelatihan', (int)$id_jenis);
+        }
+
+        if (strtolower($level) === 'panitia') {
+            $this->db->join('tbl_panitia_pelatihan pp', 'pp.pelatihan_id = p.id_pelatihan', 'inner');
+            $this->db->where('pp.panitia_id', $panitia_id);
+        }
+
+        // PERBAIKAN BUG: SELECT di atas pakai MIN(), jadi GROUP BY wajib
+        // diterapkan untuk SEMUA level (bukan hanya saat join panitia
+        // ditambahkan), supaya tidak semua baris malah ke-collapse jadi
+        // satu untuk level selain panitia. Untuk selain panitia ini tidak
+        // mengubah jumlah baris (tidak ada join tbl_panitia_pelatihan).
+        $this->db->group_by('p.id_pelatihan');
+
+        $this->db->order_by('p.id_pelatihan', 'DESC');
+        $this->data['pelatihan'] = $this->db->get();
+
         $this->data['title_web'] = 'Data Peserta Pelatihan';
         $this->load->view('header_view',$this->data);
         $this->load->view('sidebar_view',$this->data);
@@ -4167,7 +4239,7 @@ public function prosesmateri()
 
         $this->data['title_web'] = 'Data Materi dan Pengajar Pelatihan Dasar CPNS';
 
-        $this->db->select('p.*, j.nama_jenis_pelatihan');
+        $this->db->select('p.*, MIN(j.nama_jenis_pelatihan) AS nama_jenis_pelatihan', FALSE); // MIN() supaya aman dipakai bareng GROUP BY (ONLY_FULL_GROUP_BY)
         $this->db->from('tbl_pelatihan p');
         $this->db->join('tbl_jenis_pelatihan j', 'j.id_jenis_pelatihan = p.id_jenis_pelatihan', 'left');
 
@@ -4179,6 +4251,13 @@ public function prosesmateri()
             $this->db->join('tbl_panitia_pelatihan pp', 'pp.pelatihan_id = p.id_pelatihan', 'inner');
             $this->db->where('pp.panitia_id', $panitia_id);
         }
+
+        // PERBAIKAN BUG: SELECT di atas pakai MIN(), jadi GROUP BY wajib
+        // diterapkan untuk SEMUA level (bukan hanya panitia) supaya tidak
+        // semua baris ke-collapse jadi satu untuk level lain. Sekaligus
+        // ini yang mencegah satu pelatihan tampil berkali-kali untuk
+        // panitia yang punya beberapa baris cocok di tbl_panitia_pelatihan.
+        $this->db->group_by('p.id_pelatihan');
 
         $this->db->order_by('p.id_pelatihan', 'DESC');
         $this->data['pelatihan'] = $this->db->get();
@@ -4567,34 +4646,50 @@ public function prosespengajar()
 	public function cetaklaporan()
 	{
 		$this->data['idbo'] = $this->session->userdata('ses_id');
-		$jenis = $this->input->get('jenis');
+		$panitia_id = $this->session->userdata('id_login');
+        $level = $this->session->userdata('level');
+    	$jenis = $this->input->get('jenis');
+        $id_jenis = null;
+    	$this->data['pelatihan'] = $this->db->query("SELECT * FROM tbl_pelatihan WHERE deleted_at IS NULL ORDER BY id_pelatihan DESC");
 
 		// Build query dengan benar
-		$this->db->select('*');
-		$this->db->from('tbl_pelatihan');
-		$this->db->where('deleted_at IS NULL', null, false); // Hanya yang tidak dihapus
+		// $this->db->select('*');
+		// $this->db->from('tbl_pelatihan');
+		// $this->db->where('deleted_at IS NULL', null, false); // Hanya yang tidak dihapus
 
 		// Terapkan filter berdasarkan jenis
-		if ($jenis == 'PJJ') {
-			$this->db->where('id_jenis_pelatihan', 1);
-		} elseif ($jenis == 'PDWK') {
-			$this->db->where('id_jenis_pelatihan', 2);
-		}
-		// Jika tidak ada filter, tampilkan semua (tanpa where id_jenis_pelatihan)
-
-		$this->data['pelatihan'] = $this->db->order_by('id_pelatihan', 'DESC')->get();
-
-		// DEBUG: Tampilkan query dan hasil untuk memastikan
-		// echo "Query: " . $this->db->last_query() . "<br>";
-		// echo "Jumlah hasil: " . $this->data['pelatihan']->num_rows() . "<br>";
+		if ($jenis === 'PJJ') {
+            $id_jenis = 1;
+            $this->data['title_web'] = 'Cetak Laporan Pelatihan PJJ';
+        } elseif ($jenis === 'PDWK') {
+            $id_jenis = 2;
+            $this->data['title_web'] = 'Cetak Laporan Pelatihan PDWK';
+        } elseif ($jenis === 'Latsar') {
+            $id_jenis = 3;
+            $this->data['title_web'] = 'Cetak Laporan Pelatihan Dasar CPNS';
+        } else {
+            $this->data['title_web'] = 'Cetak Laporan Pelatihan';
+        }
 		
-		// Tampilkan beberapa data untuk debugging
-		// if ($this->data['pelatihan']->num_rows() > 0) {
-		// 	echo "Contoh data:<br>";
-		// 	$first_row = $this->data['pelatihan']->first_row('array');
-		// 	print_r($first_row);
-		// }
-		// die();
+
+        $this->db->select('p.*, MIN(j.nama_jenis_pelatihan) AS nama_jenis_pelatihan', FALSE); // MIN() supaya aman dipakai bareng GROUP BY (ONLY_FULL_GROUP_BY)
+        $this->db->from('tbl_pelatihan p');
+        $this->db->join('tbl_jenis_pelatihan j', 'j.id_jenis_pelatihan = p.id_jenis_pelatihan', 'left');
+        $this->db->where('p.deleted_at IS NULL', NULL, FALSE);
+
+        if (!is_null($id_jenis)) {
+            $this->db->where('p.id_jenis_pelatihan', (int)$id_jenis);
+        }
+
+        if (strtolower($level) === 'panitia') {
+            $this->db->join('tbl_panitia_pelatihan pp', 'pp.pelatihan_id = p.id_pelatihan', 'inner');
+            $this->db->where('pp.panitia_id', $panitia_id);
+        }
+		
+        $this->db->group_by('p.id_pelatihan');
+
+        $this->db->order_by('p.id_pelatihan', 'DESC');
+        $this->data['pelatihan'] = $this->db->get();
 
 		$this->data['title_web'] = 'Cetak Laporan Pelatihan';
 		$this->load->view('header_view',$this->data);
@@ -4629,16 +4724,49 @@ public function prosespengajar()
 		public function cetaklampiranlaporan()
 	{
 		$this->data['idbo'] = $this->session->userdata('ses_id');
-		$jenis = $this->input->get('jenis');
+		$panitia_id = $this->session->userdata('id_login');
+        $level = $this->session->userdata('level');
+    	$jenis = $this->input->get('jenis');
+        $id_jenis = null;
     	$this->data['pelatihan'] = $this->db->query("SELECT * FROM tbl_pelatihan WHERE deleted_at IS NULL ORDER BY id_pelatihan DESC");
 		// Terapkan filter berdasarkan jenis
-		if ($jenis == 'PJJ') {
-			$this->db->where('id_jenis_pelatihan', 1);
-		} elseif ($jenis == 'PDWK') {
-			$this->db->where('id_jenis_pelatihan', 2);
-		} elseif ($jenis == 'Latsar') {
-			$this->db->where('id_jenis_pelatihan', 3);
-		}
+		if ($jenis === 'PJJ') {
+            $id_jenis = 1;
+            $this->data['title_web'] = 'Cetak Lampiran Dokumen Pelatihan PJJ';
+        } elseif ($jenis === 'PDWK') {
+            $id_jenis = 2;
+            $this->data['title_web'] = 'Cetak Lampiran Dokumen Pelatihan PDWK';
+        } elseif ($jenis === 'Latsar') {
+            $id_jenis = 3;
+            $this->data['title_web'] = 'Cetak Lampiran Dokumen Pelatihan Dasar CPNS';
+        } else {
+            $this->data['title_web'] = 'Cetak Lampiran Dokumen Pelatihan';
+        }
+
+        $this->db->select('p.*, MIN(j.nama_jenis_pelatihan) AS nama_jenis_pelatihan', FALSE); // MIN() supaya aman dipakai bareng GROUP BY (ONLY_FULL_GROUP_BY)
+        $this->db->from('tbl_pelatihan p');
+        $this->db->join('tbl_jenis_pelatihan j', 'j.id_jenis_pelatihan = p.id_jenis_pelatihan', 'left');
+        $this->db->where('p.deleted_at IS NULL', NULL, FALSE);
+
+        if (!is_null($id_jenis)) {
+            $this->db->where('p.id_jenis_pelatihan', (int)$id_jenis);
+        }
+
+        if (strtolower($level) === 'panitia') {
+            $this->db->join('tbl_panitia_pelatihan pp', 'pp.pelatihan_id = p.id_pelatihan', 'inner');
+            $this->db->where('pp.panitia_id', $panitia_id);
+        }
+
+        // PERBAIKAN BUG: SELECT di atas pakai MIN(), jadi GROUP BY wajib
+        // diterapkan untuk SEMUA level (bukan hanya saat join panitia
+        // ditambahkan), supaya tidak semua baris malah ke-collapse jadi
+        // satu untuk level selain panitia. Untuk selain panitia ini tidak
+        // mengubah jumlah baris (tidak ada join tbl_panitia_pelatihan).
+        $this->db->group_by('p.id_pelatihan');
+
+        $this->db->order_by('p.id_pelatihan', 'DESC');
+        $this->data['pelatihan'] = $this->db->get();
+
         $this->data['title_web'] = 'Cetak Lampiran Dokumen Pelatihan';
         $this->load->view('header_view',$this->data);
         $this->load->view('sidebar_view',$this->data);
@@ -5343,7 +5471,7 @@ public function exportLampiranPelatihan($id_pelatihan)
 
         if ($count > 0) {
             // Tetap ambil datanya (tanpa filtering deleted_at karena ini konteks pengeditan spesifik)
-            $this->data['roles'] = $this->db->query("SELECT * FROM tbl_pegawai WHERE id_pegawai='$id'")->row();
+            $this->data['roles'] = $this->db->query("SELECT * FROM tbl_pegawai WHERE id_pegawai=?", array($id))->row();
         } else {
             echo '<script>alert("KATEGORI TIDAK DITEMUKAN");window.location="' . base_url('data/pegawai') . '"</script>';
         }
@@ -5556,7 +5684,7 @@ public function prosespegawai()
 
         if ($count > 0) {
             // Tetap ambil datanya (tanpa filtering deleted_at karena ini konteks pengeditan spesifik)
-            $this->data['roles'] = $this->db->query("SELECT * FROM tbl_role WHERE id_role='$id'")->row();
+            $this->data['roles'] = $this->db->query("SELECT * FROM tbl_role WHERE id_role=?", array($id))->row();
         } else {
             echo '<script>alert("KATEGORI TIDAK DITEMUKAN");window.location="' . base_url('data/role') . '"</script>';
         }
@@ -5806,7 +5934,7 @@ public function prosespegawai()
 			$count = $this->M_Admin->CountTableId('tbl_kategori','id_kategori',$id);
 			if($count > 0)
 			{			
-				$this->data['kat'] = $this->db->query("SELECT *FROM tbl_kategori WHERE id_kategori='$id'")->row();
+				$this->data['kat'] = $this->db->query("SELECT *FROM tbl_kategori WHERE id_kategori=?", array($id))->row();
 			}else{
 				echo '<script>alert("KATEGORI TIDAK DITEMUKAN");window.location="'.base_url('data/kategori').'"</script>';
 			}
@@ -5876,7 +6004,7 @@ public function prosespegawai()
 			$count = $this->M_Admin->CountTableId('tbl_rak','id_rak',$id);
 			if($count > 0)
 			{	
-				$this->data['rak'] = $this->db->query("SELECT *FROM tbl_rak WHERE id_rak='$id'")->row();
+				$this->data['rak'] = $this->db->query("SELECT *FROM tbl_rak WHERE id_rak=?", array($id))->row();
 			}else{
 				echo '<script>alert("KATEGORI TIDAK DITEMUKAN");window.location="'.base_url('data/rak').'"</script>';
 			}

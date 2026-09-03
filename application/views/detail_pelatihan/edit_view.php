@@ -19,7 +19,7 @@
   </section>
 
   <section class="content">
-    <form action="<?= base_url('data/prosesdetailpelatihan'); ?>" method="POST">
+    <form action="<?= base_url('data/prosesdetailpelatihan'); ?>" method="POST"><?php echo '<input type="hidden" name="'.$this->security->get_csrf_token_name().'" value="'.$this->security->get_csrf_hash().'">'; ?>
       <input type="hidden" name="id_jenis_pelatihan" value="<?= (int)$id_jenis; ?>">
       <div class="row">
         <div class="col-md-12">

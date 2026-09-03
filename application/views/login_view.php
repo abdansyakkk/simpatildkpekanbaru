@@ -53,7 +53,7 @@
   <!-- /.login-logo -->
   <div class="login-box-body" style="border:2px solid #226bbf;">
     <p class="login-box-msg" style="font-size:16px;"></p>
-    <form action="<?= base_url('login/auth');?>" method="POST">
+    <form action="<?= base_url('login/auth');?>" method="POST"><?php echo '<input type="hidden" name="'.$this->security->get_csrf_token_name().'" value="'.$this->security->get_csrf_hash().'">'; ?>
       <div class="form-group has-feedback">
         <input type="text" class="form-control" placeholder="Username" id="user" name="user" required="required" autocomplete="off">
         <span class="glyphicon glyphicon-user form-control-feedback"></span>

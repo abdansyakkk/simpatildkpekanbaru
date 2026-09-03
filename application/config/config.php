@@ -325,7 +325,11 @@ $config['cache_query_string'] = FALSE;
 | https://codeigniter.com/user_guide/libraries/encryption.html
 |
 */
-$config['encryption_key'] = '';
+// Diambil dari .env (ENCRYPTION_KEY), sama seperti kredensial DB — supaya
+// key rahasia ini tidak ikut ter-commit ke Git. Isi ENCRYPTION_KEY di file
+// .env kamu dengan string acak yang panjang & kuat, contoh cara generate
+// lewat terminal: php -r "echo bin2hex(random_bytes(32));"
+$config['encryption_key'] = getenv('ENCRYPTION_KEY') ?: '';
 
 /*
 |--------------------------------------------------------------------------
@@ -450,7 +454,13 @@ $config['global_xss_filtering'] = FALSE;
 | 'csrf_regenerate' = Regenerate token on every submission
 | 'csrf_exclude_uris' = Array of URIs which ignore CSRF checks
 */
-$config['csrf_protection'] = FALSE;
+$config['csrf_protection'] = TRUE;
+// Diaktifkan (sebelumnya FALSE). Semua 29 form di aplikasi sudah ditambahkan
+// hidden CSRF token field secara otomatis, dan 2 AJAX POST call juga sudah
+// disertakan token-nya, supaya tidak ada form yang gagal submit setelah
+// perubahan ini. Kalau nanti menambah form/AJAX POST baru, pastikan
+// menyertakan token: $this->security->get_csrf_token_name() /
+// get_csrf_hash(), atau pakai helper form_open() yang otomatis menanganinya.
 $config['csrf_token_name'] = 'csrf_test_name';
 $config['csrf_cookie_name'] = 'csrf_cookie_name';
 $config['csrf_expire'] = 7200;

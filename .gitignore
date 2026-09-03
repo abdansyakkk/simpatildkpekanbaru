@@ -1,0 +1,16 @@
+# Kredensial & konfigurasi lokal — JANGAN pernah commit file ini
+.env
+
+# Cache & log aplikasi
+application/cache/*
+!application/cache/index.html
+application/logs/*.log
+application/logs/*.php.bak
+!application/logs/index.html
+
+# File sistem lokal
+.DS_Store
+Thumbs.db
+
+# Dependency (opsional — hapus baris ini kalau memang ingin vendor/ ikut ter-commit)
+# vendor/

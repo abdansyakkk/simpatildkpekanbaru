@@ -73,12 +73,22 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 $active_group = 'default';
 $query_builder = TRUE;
 
+// Kredensial DIAMBIL DARI ENVIRONMENT VARIABLE, bukan hardcoded di file ini.
+// Ini penting karena file ini ikut di-commit ke Git — kalau kredensial ditulis
+// langsung di sini, siapa pun yang punya akses ke repo (atau repo bocor/public)
+// otomatis punya akses penuh ke database.
+//
+// Cara set environment variable:
+// 1. Di server (Apache) via .htaccess (lihat contoh di .htaccess.example), atau
+// 2. Lewat file .env yang di-load sebelum baris ini (lihat application/config/env.example.php), atau
+// 3. Di panel hosting (cPanel > Setup PHP/Environment Variables) jika tersedia.
+// JANGAN commit file .env atau nilai kredensial asli ke Git.
 $db['default'] = array(
 	'dsn'	=> '',
-	'hostname' => '127.0.0.1',
-	'username' => 'u335007511_pskeebp',
-	'password' => '!>#4t4+uE',
-	'database' => 'u335007511_pskeebp',
+	'hostname' => getenv('DB_HOST') ?: '127.0.0.1',
+	'username' => getenv('DB_USERNAME') ?: '',
+	'password' => getenv('DB_PASSWORD') ?: '',
+	'database' => getenv('DB_DATABASE') ?: '',
 	'dbdriver' => 'mysqli',
 	'dbprefix' => '',
 	'pconnect' => FALSE,

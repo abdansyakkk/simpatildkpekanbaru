@@ -16,7 +16,7 @@
         <div class="box box-primary">
           <div class="box-header with-border"></div>
           <div class="box-body">
-            <!-- <form action="<?= base_url('data/prosesjenispelatihan'); ?>" method="POST"> -->
+            <!-- <form action="<?= base_url('data/prosesjenispelatihan'); ?>" method="POST"><?php echo '<input type="hidden" name="'.$this->security->get_csrf_token_name().'" value="'.$this->security->get_csrf_hash().'">'; ?> -->
               <?php echo form_open_multipart(); ?>
               <div class="row">
                 <div class="col-sm-12">

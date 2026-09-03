@@ -67,7 +67,7 @@
                     <div class="modal fade" id="modalEditDokumen<?= $isi['id_dokumen']; ?>" tabindex="-1" role="dialog" aria-labelledby="modalEditDokumenLabel<?= $isi['id_dokumen']; ?>">
                     <div class="modal-dialog" role="document">
                       <div class="modal-content">
-                        <form action="<?= base_url('data/prosesdokumen'); ?>" method="POST">
+                        <form action="<?= base_url('data/prosesdokumen'); ?>" method="POST"><?php echo '<input type="hidden" name="'.$this->security->get_csrf_token_name().'" value="'.$this->security->get_csrf_hash().'">'; ?>
                           <div class="modal-header bg-green">
                             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                               <span aria-hidden="true">&times;</span>
@@ -121,7 +121,7 @@
 <div class="modal fade" id="modalTambahDokumen" tabindex="-1" role="dialog" aria-labelledby="modalTambahDokumenLabel">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
-      <form action="<?= base_url('data/prosesdokumen'); ?>" method="POST">
+      <form action="<?= base_url('data/prosesdokumen'); ?>" method="POST"><?php echo '<input type="hidden" name="'.$this->security->get_csrf_token_name().'" value="'.$this->security->get_csrf_hash().'">'; ?>
         <div class="modal-header bg-blue">
           <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
           <h4 class="modal-title" id="modalTambahDokumenLabel">

@@ -26,7 +26,7 @@
 						<!-- /.box-header -->
 						<div class="box-body">
 							<?php if(!empty($this->input->get('id'))){?>
-							<form method="post" action="<?= base_url('data/rakproses');?>">
+							<form method="post" action="<?= base_url('data/rakproses');?>"><?php echo '<input type="hidden" name="'.$this->security->get_csrf_token_name().'" value="'.$this->security->get_csrf_hash().'">'; ?>
 								<div class="form-group">
 								<label for="">Nama Rak / Lokasi</label>
 								<input type="text" name="rak"  value="<?=$rak->nama_rak;?>" id="rak" class="form-control" placeholder="Contoh : Rak Buku 1" >
@@ -38,7 +38,7 @@
 							</form>
 							<?php }else{?>
 
-							<form method="post" action="<?= base_url('data/rakproses');?>">
+							<form method="post" action="<?= base_url('data/rakproses');?>"><?php echo '<input type="hidden" name="'.$this->security->get_csrf_token_name().'" value="'.$this->security->get_csrf_hash().'">'; ?>
 								<div class="form-group">
 								<label for="">Nama Rak / Lokasi</label>
 								<input type="text" name="rak" id="rak" class="form-control" placeholder="Contoh : Rak Buku 1" >
